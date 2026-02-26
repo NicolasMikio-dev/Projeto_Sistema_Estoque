@@ -40,7 +40,14 @@ with app.app_context():
 def registrar():
 
     if request.method == 'POST':
-        novo_usuario = Usuario(username=request.form['username'], senha=request.form['senha'])
+        username = request.form['username']
+        # Verifica se o usuário já existe
+        usuario_existente = Usuario.query.filter_by(username=username).first()
+        
+        if usuario_existente:
+            flash('Este nome de usuário já está em uso. Escolha outro.', 'danger')
+            return redirect(url_for('registrar'))
+        novo_usuario = Usuario(username=username, senha=request.form['senha'])
         db.session.add(novo_usuario)
         db.session.commit()
 
@@ -90,9 +97,9 @@ def index():
     query_base = Produto.query.filter_by(usuario_id=current_user.id)
 
     if busca:
-        produtos = Produto.query_base.filter(Produto.nome.contains(busca)).all()
+        produtos = query_base.filter(Produto.nome.contains(busca)).all()
     else:
-        produtos = Produto.query_base.all()
+        produtos = query_base.all()
 
     return render_template('index.html', produtos=produtos)
 
